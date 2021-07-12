@@ -1,6 +1,6 @@
 library(shiny)
 library(jsonlite)
-library(hash)
+library(shinyMatrix)
 
 weather_tabs <- tabsetPanel(
     id = "coordinates",
@@ -11,6 +11,36 @@ weather_tabs <- tabsetPanel(
     tabPanel("Yes",
     )
 )
+
+soil_layers <- matrix("",18,3)
+colnames(soil_layers) <- c("Layer 1","Layer 2","Layer 3")
+rownames(soil_layers) <- c("Lower depth of soil layer",
+                 "Fractional value at which point soil water becomes plant unavailable",
+                 "Fractional value of soil water at which the soil matric potential is zero",
+                 "Saturated soil value (fractional)",
+                 "saturated hydraulic conductivity (mm/h)",
+                 "Fraction of porosity from which anions are excluded",
+                 "Percent of clay per layer (%)",
+                 "Soil temperature of each layer",
+                 "Bulk density of the soil for the entire depth",
+                 "Percentage of layer composed of organic carbon",
+                 "NH4 Initializer variable",
+                 "Active N %",
+                 "Labile Phosphorus",
+                 "Active mineral rate",
+                 "Volatile exchange factor",
+                 "Denitrification rate",
+                 "Fraction of soil water in layer",
+                 "Fraction of soil organic matter")
+
+crop_rotation <- matrix("",12,5)
+colnames(crop_rotation) <- c("Start Year","Repeat every _ years","Planting Date (in Julian day)",
+                             "Harvest Date (in Julian Day)","Harvest Type")
+rownames(crop_rotation) <- c("Alfalfa","Cereal Rye","Corn",
+                             "Fall Oats","Potato","Soybean","Spring Barley",
+                             "Spring Wheat","Sugar Beet","Tall Fescue",
+                             "Triticale","Winter Wheat")
+
 
 # Define UI ----
 ui <- navbarPage("RuFas Input", id = "main",
@@ -27,12 +57,63 @@ ui <- navbarPage("RuFas Input", id = "main",
                               numericInput("lat", "Latitude", min = -90, max = 90, value = 0),
                               weather_tabs,
                               textOutput("coord"),
-                              width = 10
-                          ),
-                          sidebarPanel(
-                              actionButton("goto_fields","Next"),width=3
+                              sliderInput("n_fields","Number of Fields: ",
+                                          min = 1, max =20, value = 1),
+                              actionButton("generate_fields","Generate Fields"),
+                              width = 8
                           )),
-                 tabPanel("Fields"),
+                 
+                 tabPanel("Fields",
+                      tabsetPanel(id="fields",
+                          tabPanel("Field 1",
+                                   tabsetPanel(
+                                       tabPanel("Soil",
+                                                sidebarPanel(
+                                                numericInput("profile_bulk_density_1","Bulk density of the soil for the entire depth:",
+                                                             0, 0),
+                                                numericInput("CN2_1", "Curve Number (SCS) represents surface runoff factor of water: ", 0, 0),
+                                                numericInput("field_slope_1", "Slope of an individual field (%/100): ", 0, 0),
+                                                numericInput("slope_length_1", "Length of slope: ", 0, 0),
+                                                numericInput("manning_1", "Mannings roughness coefficient for ground use type: ", 0, 0),
+                                                numericInput("field_size_1", "Size of individual field where slope was calculated: ", 0, 0),
+                                                numericInput("practice_factor_1", "Ratio of soil loss with a specific support practice to corresponding loss with up-and-down slope culture: ", 0, 0),
+                                                numericInput("sand_1", "Fraction of sand (%/100): ", 0, 0),
+                                                numericInput("silt_1", "Fraction of silt (%/100): ", 0, 0),
+                                                numericInput("soil_albedo_1", "Soil solar radiation absorbance factor: ", 0, 0),
+                                                numericInput("initial_residue_1", "Initial amount of soil residue (kg/ha): ", 0, 0),
+                                                numericInput("fresh_N_mineral_rate_1", "Nitrogen N mineralization rate from SWAT: ", 0, 0),
+                                                selectInput("soil_cover_type_1", "Soil Cover Type: ", c("Bare","Residue Cover","Grassed")), width = 4
+                                                ),
+                                                sidebarPanel(matrixInput(
+                                                    "soil_layers_1",
+                                                    value = soil_layers,
+                                                    rows = list(
+                                                        extend = FALSE
+                                                    ),
+                                                    cols = list(
+                                                        names = TRUE
+                                                    )
+                                                ),width = 8)),
+                                       tabPanel("Crop",
+                                                sidebarPanel(checkboxGroupInput("selected_crops","Select the desired crops and fill out the corresponding rows in the table: ",
+                                                                   choices = c("Alfalfa","Cereal Rye","Corn",
+                                                                               "Fall Oats","Potato","Soybean","Spring Barley",
+                                                                               "Spring Wheat","Sugar Beet","Tall Fescue",
+                                                                               "Triticale","Winter Wheat")),width = 4),
+                                                sidebarPanel(matrixInput(
+                                                    "crop_rotation_1",
+                                                    value = crop_rotation,
+                                                    rows = list(
+                                                        extend = FALSE
+                                                    ),
+                                                    cols = list(
+                                                        names = TRUE
+                                                    )
+                                                ),width = 8)
+                                                ),
+                                       tabPanel("Field Management")
+                                   ))))
+                      ,
                  tabPanel("Animals",
                           sidebarPanel(
                               tabsetPanel(
@@ -123,6 +204,24 @@ server <- function(input, output, session) {
     
     observeEvent(input$goto_fields, {
         updateNavbarPage(inputId = "main", selected = "Fields")
+    })
+    
+    new_n_fields = reactive({input$n_fields})
+
+    observeEvent(input$generate_fields, {
+        
+        for (j in 2:20){
+            remove_id = sprintf('Field %i',j)
+            removeTab("fields",remove_id)
+        }
+
+        if (new_n_fields() > 1){
+            for (j in 2:new_n_fields()){
+                add_id = sprintf("Field %i",j)
+                appendTab("fields",tabPanel(add_id))
+            }
+        }
+        old_n_fields <- new_n_fields()
     })
     
    # herd_info <- reactive({
@@ -222,6 +321,8 @@ server <- function(input, output, session) {
            writeLines(animal_JSON(),file)
        }
     )
+    
+    output$soil_layers <- renderText({"Soil Layers"})
 }
 # Run the app ----
 shinyApp(ui = ui, server = server)
