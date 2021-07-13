@@ -109,7 +109,8 @@ ui <- navbarPage("RuFas Input", id = "main",
                                                     cols = list(
                                                         names = TRUE
                                                     )
-                                                ),width = 8)
+                                                ),
+                                                width = 8)
                                                 ),
                                        tabPanel("Field Management")
                                    ))))
@@ -162,7 +163,8 @@ ui <- navbarPage("RuFas Input", id = "main",
                                            downloadLink("download_animal_json","Download Animal JSON File")
                                            )
                               ), width = 12)),
-                 tabPanel("Feed"),
+                 tabPanel("Feed",
+                          downloadLink("download_all_input","Submit")),
                  tabPanel("Output")
                  
 )
@@ -223,106 +225,96 @@ server <- function(input, output, session) {
         }
         old_n_fields <- new_n_fields()
     })
+    # TODO: FINISH EXPORTING TO JSON AUTOMATICALLY   
+#     # herd information
+#     calf_num <- (reactive({input$calf_num}))
+#     heiferI_num <- reactive({input$heiferI_num})
+#     heiferII_num <- reactive({input$heiferII_num})
+#     heiferIII_num <- reactive({input$heiferIII_num})
+#     cow_num <- reactive({input$cow_num})
+#     replace_num <- reactive({input$replace_num})
+#     herd_num <- reactive({input$herd_num})
+#     herd_init <- reactive({if(input$herd_init == "Yes") TRUE else FALSE})
+#     breed <- reactive({substr(input$breed ,start = 1, stop=unlist(gregexpr(" ",input$breed))[1]-1)})
+# 
+#     # animal configuration
+#     # management decisions
+#     breeding_start_day_h <- reactive({input$breeding_start_day_h})
+#     heifer_repro_method <- reactive({input$heifer_repro_method})
+#     cow_repro_method <- reactive({input$cow_repro_method})
+#     semen_type <- reactive(tolower({input$semen_type}))
+#     days_in_preg_when_dry <- reactive({input$days_in_preg_when_dry})
+#     lactation_curve <- reactive(tolower({input$lactation_curve}))
+#     heifer_repro_cull_time <- reactive({input$heifer_repro_cull_time})
+#     repro_cull_time <- reactive({input$repro_cull_time})
+#     do_not_breed_time <- reactive({input$do_not_breed_time})
+#     cull_milk_production <- reactive({input$cull_milk_production})
+#     cow_times_milked_per_day <- reactive({input$cow_times_milked_per_day})
+#     
+#     
+#     # repro
+#     heifer_repro_method <- reactive({input$heifer_repro_method})
+#     cow_repro_method <- reactive({input$cow_repro_method})
+#     
+#     animal_JSON <- reactive({
+#     sprintf('{
+#     "herd_information": {
+#         "calf_num": %i,
+#         "heiferI_num": %i,
+#         "heiferII_num": %i,
+#         "heiferIII_num": %i,
+#         "cow_num": %i,
+#         "replace_num": %i,
+#         "herd_num": %i,
+#         "herd_init": %d,
+#         "breed": "%s"
+#     },
+#     "animal_config": {
+#         "management_decisions": {
+#             "breeding_start_day_h": %i,
+#             "heifer_repro_method": "%s",
+#             "cow_repro_method": "%s",
+#             "semen_type": "%s",
+#             "days_in_preg_when_dry": %i,
+#             "lactation_curve": "%s",
+#             "heifer_repro_cull_time": %i,
+#             "repro_cull_time": %i,
+#             "do_not_breed_time": %i,
+#             "cull_milk_production": %i,
+#             "cow_times_milked_per_day": %i
+#         },
+#         "repro": {
+#             "heifer_repro_method": "%s",
+#             "cow_repro_method": "%s"
+#         }
+#     }
+# }'  ,calf_num(),heiferI_num(),heiferII_num(),heiferIII_num(),
+#     cow_num(),replace_num(),herd_num(),herd_init(),breed(),breeding_start_day_h(),
+#     heifer_repro_method(),cow_repro_method(),semen_type(),days_in_preg_when_dry(),
+#     lactation_curve(),heifer_repro_cull_time(),repro_cull_time(),do_not_breed_time(),
+#     cull_milk_production(),cow_times_milked_per_day(),
+#     heifer_repro_method(),cow_repro_method())
+#     })
+#     
+#     output$download_animal_json <- downloadHandler(
+#         filename = function() {
+#             paste("my_RuFaS_animal-", Sys.Date(), ".json")
+#         },
+#        content = function(file) {
+#            writeLines(animal_JSON(),file)
+#        }
+#     )
     
-   # herd_info <- reactive({
-   #     df <- data.frame(
-   #         calf_num = input$calf_num,
-   #         heiferI_num = input$heiferI_num)
-   # })
-   # 
-   # management_decisions <- reactive({
-   #     df <- data.frame(
-   #     breeding_start_day_h = input$breeding_start_day_h,
-   #     heifer_repro_method = input$heifer_repro_method,
-   #     cow_repro_method = input$cow_repro_method)
-   # })
-   # 
-   # animal_df <- reactive({
-   #     df <-data.frame(
-   #     herd_information = toJSON(herd_info()),
-   #     animal_configuration = toJSON(management_decisions()))
-   # })
-       
-    # herd information
-    calf_num <- (reactive({input$calf_num}))
-    heiferI_num <- reactive({input$heiferI_num})
-    heiferII_num <- reactive({input$heiferII_num})
-    heiferIII_num <- reactive({input$heiferIII_num})
-    cow_num <- reactive({input$cow_num})
-    replace_num <- reactive({input$replace_num})
-    herd_num <- reactive({input$herd_num})
-    herd_init <- reactive({if(input$herd_init == "Yes") TRUE else FALSE})
-    breed <- reactive({substr(input$breed ,start = 1, stop=unlist(gregexpr(" ",input$breed))[1]-1)})
-
-    # animal configuration
-    # management decisions
-    breeding_start_day_h <- reactive({input$breeding_start_day_h})
-    heifer_repro_method <- reactive({input$heifer_repro_method})
-    cow_repro_method <- reactive({input$cow_repro_method})
-    semen_type <- reactive(tolower({input$semen_type}))
-    days_in_preg_when_dry <- reactive({input$days_in_preg_when_dry})
-    lactation_curve <- reactive(tolower({input$lactation_curve}))
-    heifer_repro_cull_time <- reactive({input$heifer_repro_cull_time})
-    repro_cull_time <- reactive({input$repro_cull_time})
-    do_not_breed_time <- reactive({input$do_not_breed_time})
-    cull_milk_production <- reactive({input$cull_milk_production})
-    cow_times_milked_per_day <- reactive({input$cow_times_milked_per_day})
-    
-    
-    # repro
-    heifer_repro_method <- reactive({input$heifer_repro_method})
-    cow_repro_method <- reactive({input$cow_repro_method})
-    
-    animal_JSON <- reactive({
-    sprintf('{
-    "herd_information": {
-        "calf_num": %i,
-        "heiferI_num": %i,
-        "heiferII_num": %i,
-        "heiferIII_num": %i,
-        "cow_num": %i,
-        "replace_num": %i,
-        "herd_num": %i,
-        "herd_init": %d,
-        "breed": "%s"
-    },
-    "animal_config": {
-        "management_decisions": {
-            "breeding_start_day_h": %i,
-            "heifer_repro_method": "%s",
-            "cow_repro_method": "%s",
-            "semen_type": "%s",
-            "days_in_preg_when_dry": %i,
-            "lactation_curve": "%s",
-            "heifer_repro_cull_time": %i,
-            "repro_cull_time": %i,
-            "do_not_breed_time": %i,
-            "cull_milk_production": %i,
-            "cow_times_milked_per_day": %i
-        },
-        "repro": {
-            "heifer_repro_method": "%s",
-            "cow_repro_method": "%s"
-        }
-    }
-}'  ,calf_num(),heiferI_num(),heiferII_num(),heiferIII_num(),
-    cow_num(),replace_num(),herd_num(),herd_init(),breed(),breeding_start_day_h(),
-    heifer_repro_method(),cow_repro_method(),semen_type(),days_in_preg_when_dry(),
-    lactation_curve(),heifer_repro_cull_time(),repro_cull_time(),do_not_breed_time(),
-    cull_milk_production(),cow_times_milked_per_day(),
-    heifer_repro_method(),cow_repro_method())
-    })
-    
-    output$download_animal_json <- downloadHandler(
+    output$download_all_input <- downloadHandler(
         filename = function() {
-            paste("my_RuFaS_animal-", Sys.Date(), ".json")
+            paste("my_RuFaS_input", Sys.Date(), ".txt")
         },
-       content = function(file) {
-           writeLines(animal_JSON(),file)
-       }
+        content = function(file){
+            inputsList = sort(names(reactiveValuesToList(input)))
+            exportVars <- paste0(inputsList, "=", sapply(inputsList, function(inpt) input[[inpt]]))
+            write(exportVars, file)
+        }
     )
-    
-    output$soil_layers <- renderText({"Soil Layers"})
 }
 # Run the app ----
 shinyApp(ui = ui, server = server)
