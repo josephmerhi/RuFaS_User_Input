@@ -34,19 +34,19 @@ rownames(soil_layers) <- c("Lower depth of soil layer",
                  "Fraction of soil water in layer",
                  "Fraction of soil organic matter")
 
-crop_rotation <- matrix("",12,5)
-colnames(crop_rotation) <- c("Start Year","Repeat every _ years","Planting Date (in Julian day)",
+crop_rotation <- matrix("",5,3)
+colnames(crop_rotation) <- c("Planting Date (in Julian day)",
                              "Harvest Date (in Julian Day)","Harvest Type (Scheduled or Optimal)")
-rownames(crop_rotation) <- c("Alfalfa","Cereal Rye","Corn",
-                             "Fall Oats","Potato","Soybean","Spring Barley",
-                             "Spring Wheat","Sugar Beet","Tall Fescue",
-                             "Triticale","Winter Wheat")
+rownames(crop_rotation) <- c("Year 1", "Year 2", "Year 3", "Year 4", "Year 5")
+
+feeds_ID <- c(1:34,38:52,56,57,61,65,69,73,77,81,85:87,91,92,96:157)
 
 
 # Define UI ----
-ui <- navbarPage("RuFas Input", theme = shinytheme("sandstone"), id = "main",
+ui <- navbarPage("RuFas Input", theme = shinytheme("darkly"), id = "main",
                  tabPanel("General Configuration",
                           sidebarPanel(
+                              textInput("dataset_ID","Enter a name for your dataset: ", placeholder = "my_RuFaS_input"),
                               dateRangeInput("start_end_dates", "Date range:",
                                              max = Sys.Date(),
                                              format = "mm-dd-yyyy"),
@@ -55,7 +55,7 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("sandstone"), id = "main",
                                           choices = c("Yes", "No")),
                               selectInput("weather_dataset","Can you provide a complete weather dataset?",
                                           choices = c("Yes", "No")),
-                              numericInput("lat", "Latitude", min = -90, max = 90, value = 0),
+                              numericInput("lat", "Latitude (in \u00B0)", min = -90, max = 90, value = 0),
                               weather_tabs,
                               textOutput("coord"),
                               sliderInput("n_fields","Number of Fields: ",
@@ -84,7 +84,7 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("sandstone"), id = "main",
                                                 numericInput("initial_residue_1", "Initial amount of soil residue (kg/ha): ", 0, 0),
                                                 numericInput("fresh_N_mineral_rate_1", "Nitrogen N mineralization rate from SWAT: ", 0, 0),
                                                 selectInput("soil_cover_type_1", "Soil Cover Type: ", c("Bare","Residue Cover","Grassed")),
-                                                sliderInput("n_Layers_1","Select the number of soil layers and fill out the corresponding columns in the next table (any
+                                                sliderInput("n_Layers_1","Select the number of soil layers (at least 3 layers are recommended for best results) and fill out the corresponding columns in the next table (any
                                                             unused columns can be left empty)", 1, 5, 3)            
                                                             , width = 4
                                                 ),
@@ -98,13 +98,33 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("sandstone"), id = "main",
                                                         names = TRUE
                                                     )
                                                 ),width = 8)),
-                                       tabPanel("Crop",
-                                                sidebarPanel(checkboxGroupInput("selected_crops_1","Select the desired crops and fill out the corresponding rows in the next table (any
-                                                            unused rows can be left empty)",
-                                                                   choices = c("Alfalfa","Cereal Rye","Corn",
-                                                                               "Fall Oats","Potato","Soybean","Spring Barley",
-                                                                               "Spring Wheat","Sugar Beet","Tall Fescue",
-                                                                               "Triticale","Winter Wheat")),width = 4),
+                                       tabPanel("Crop Rotation",
+                                                sidebarPanel(tags$h3("Build a 5-year crop rotation"),
+                                                             selectInput("year_1_crop_1","Select the desired crop for year 1:",
+                                                                         choices = c("Alfalfa","Cereal Rye","Corn",
+                                                                                     "Fall Oats","Potato","Soybean","Spring Barley",
+                                                                                     "Spring Wheat","Sugar Beet","Tall Fescue",
+                                                                                     "Triticale","Winter Wheat")),
+                                                             selectInput("year_2_crop_1","Select the desired crop for year 2:",
+                                                                         choices = c("Alfalfa","Cereal Rye","Corn",
+                                                                                     "Fall Oats","Potato","Soybean","Spring Barley",
+                                                                                     "Spring Wheat","Sugar Beet","Tall Fescue",
+                                                                                     "Triticale","Winter Wheat")),
+                                                             selectInput("year_3_crop_1","Select the desired crop for year 3:",
+                                                                         choices = c("Alfalfa","Cereal Rye","Corn",
+                                                                                     "Fall Oats","Potato","Soybean","Spring Barley",
+                                                                                     "Spring Wheat","Sugar Beet","Tall Fescue",
+                                                                                     "Triticale","Winter Wheat")),
+                                                             selectInput("year_4_crop_1","Select the desired crop for year 4:",
+                                                                         choices = c("Alfalfa","Cereal Rye","Corn",
+                                                                                     "Fall Oats","Potato","Soybean","Spring Barley",
+                                                                                     "Spring Wheat","Sugar Beet","Tall Fescue",
+                                                                                     "Triticale","Winter Wheat")),
+                                                             selectInput("year_5_crop_1","Select the desired crop for year 5:",
+                                                                         choices = c("Alfalfa","Cereal Rye","Corn",
+                                                                                     "Fall Oats","Potato","Soybean","Spring Barley",
+                                                                                     "Spring Wheat","Sugar Beet","Tall Fescue",
+                                                                                     "Triticale","Winter Wheat")),width = 4),
                                                 sidebarPanel(matrixInput(
                                                     "crop_rotation_1",
                                                     value = crop_rotation,
@@ -122,54 +142,187 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("sandstone"), id = "main",
                       ,
                  tabPanel("Animals",
                           sidebarPanel(
-                              tabsetPanel(
+                              tabsetPanel(id = "animals",
                                   tabPanel("Herd Information",
                                            numericInput("calf_num", "Number of calves randomly selected from initialization herd: ",
-                                                        min = 0, value = 0),
+                                                        min = 0, value = 80),
                                            numericInput("heiferI_num", "Number of heifers between weaning and first breeding randomly selected from initialization herd: ",
-                                                        min = 0, value = 0),
+                                                        min = 0, value = 440),
                                            numericInput("heiferII_num", "Number of heifers between first breeding and close to parturition randomly selected from the initialization herd : ",
-                                                        min = 0, value = 0),
+                                                        min = 0, value = 380),
                                            numericInput("heiferIII_num", "Number of heifers close to parturition randomly selected from the initialization herd: ",
-                                                        min = 0, value = 0),
-                                           numericInput("cow_num", "Number of cows randomly selected from the initializa-tion herd: ",
-                                                        min = 0, value = 0),
+                                                        min = 0, value = 50),
+                                           numericInput("cow_num", "Number of cows randomly selected from the initialization herd: ",
+                                                        min = 0, value = 1000),
                                            numericInput("replace_num", "Number of replacements: ",
-                                                        min = 0, value = 0), # TODO: check prompt
+                                                        min = 0, value = 5000), # TODO: check prompt
                                            numericInput("herd_num", "Goal for number of cows in the herd: ",
-                                                        min = 0, value = 0),
-                                           selectInput("herd_init","Do you wish to simulate a replacement herd database?",
-                                                       choices = c("Yes", "No")),
+                                                        min = 0, value = 1000),
+                                           selectInput("herd_init","Do you wish to simulate a replacement herd database? (Not recommended)",
+                                                       choices = c("No", "Yes")),
                                            selectInput("breed", "Breed of cattle in the simulation: ",
-                                                       choices = c("HO (Holsteins)","JE (Jerseys)"))),
+                                                       choices = c("HO (Holsteins)","JE (Jerseys)")),
+                                           selectInput("methane_model","Methane emissions model: ",
+                                                       choices = c("IPCC","Mills","Mutian")),
+                                           sliderInput("n_pens","Number of pens",min = 0, max = 20, value =1),
+                                           actionButton("generate_pens","Generate Pens")),
                                   tabPanel("Management Decisions",
+                                           tags$h4("For all entries regarding reproduction protocols, please refer to the following documents: "),
+                                           tags$a(href = "https://www.dcrcouncil.org/wp-content/uploads/2019/04/Dairy-Cow-Protocol-Sheet-Updated-2018.pdf",
+                                                  "Dairy Cow Protocol Sheet"),
+                                           tags$h1(""),
+                                           tags$a(href = "https://www.dcrcouncil.org/wp-content/uploads/2018/12/Dairy-Heifer-Protocol-Sheet-Updated-2018.pdf",
+                                                  "Dairy Heifer Protocol Sheet"),
                                            numericInput("breeding_start_day_h", "Target start days born of reproduction protocols: ",
-                                                       min = 1, value = 1),
+                                                       min = 1, value = 360),
                                            selectInput("heifer_repro_method", "Reproductive protocol for heifers: ",
-                                                       choices = c("TAI")), # TODO: add more methods?
+                                                       choices = c("TAI","ED","synch-ED")),
                                            selectInput("cow_repro_method", "Reproductive protocol for cows: ",
-                                                       choices = c("TAI")), # TODO: add more methods?
+                                                       choices = c("TAI","ED","synch-ED")),
                                            selectInput("semen_type", "Type of semen used in reproduction protocols: ",
                                                        choices = c("Conventional","Sexed")),
                                            numericInput("days_in_preg_when_dry", "Days when the cow is dried off after parturition: ",
-                                                        min = 1, value = 1),
+                                                        min = 1, value = 218),
                                            selectInput("lactation_curve", "Model selection for milk production: ",
                                                        choices = c("Wood","Milkbot")),
-                                           numericInput("heifer_repro_cull_time", "Days old when a heifer would be culled if unsuccessful in bredding: ",
-                                                        min = 1, value = 1),
+                                           numericInput("heifer_repro_cull_time", "Days old when a heifer would be culled if unsuccessful in breeding: ",
+                                                        min = 1, value = 650),
                                            numericInput("repro_cull_time", "Threshold of heifer culling age, when the heifer is not pregnant at this age, she will be culled for repro failure: ",
-                                                        min = 1, value = 1),
-                                           numericInput("do_not_breed_time", "Days in pregnancy when reproduction protocols are stopped, when the cow is not pregnant at this DIM, it would not be bred anymore and will be culled when her milk production drops below the production culling line.: ",
-                                                        min = 1, value = 1),
-                                           numericInput("cull_milk_production", "Minimum milk production before animal is culled: ",
-                                                        min = 0, value = 1),
+                                                        min = 1, value = 300),
+                                           numericInput("do_not_breed_time", "Days in pregnancy when reproduction protocols are stopped: ",
+                                                        min = 1, value = 300),
+                                           numericInput("cull_milk_production", "Minimum daily milk production before animal is culled: (in kg/day)",
+                                                        min = 0, value = 22),
                                            sliderInput("cow_times_milked_per_day", "Number of times per day cows are milked: ",
-                                                       min = 1, max = 5, value = 1),
-                                           downloadLink("download_animal_json","Download Animal JSON File")
-                                           )
-                              ), width = 12)),
+                                                       min = 1, max = 4, value = 1)
+                                           ),
+                                  tabPanel("Farm Level",
+                                           sidebarPanel(
+                                               tags$h2("Fill out the required fields based on the reproduction protocols chosen in previous section: "),
+                                               numericInput("birth_weight_avg_ho","Average calf birth weight (in kg/head):",
+                                                        min = 0, value = 43.9),
+                                               sliderInput("keep_female_calf_rate","The rate at which female calves are kept and raised on-farm",
+                                                       min = 0, max = 1, value = 1, step = 0.01), width = 12,
+                                               numericInput("wean_day", "Day the calf is fully weaned from milk or milk replacer: ",
+                                                            min = 0, value = 60),
+                                               numericInput("wean_length","Number of days it takes to wean a calf: ",
+                                                            min = 0, value = 7),
+                                               selectInput("milk_type","Milk Type: ", choices = c("Milk","Milk Replacer")),
+                                               sliderInput("conception_rate_decrease","The decrease of the conception rate for later breeding",
+                                                           min = 0, max = 0.1, value = 0.026, step = 0.001),
+                                               numericInput("avg_gestation_len","The average length of gestations (in days)",
+                                                            min = 0, value = 278),
+                                               numericInput("std_gestation_len","The standard deviation of gestation length (in days)",
+                                                            min = 0, value =6),
+                                               numericInput("mature_body_weight_avg","The average mature body weight of cows (in kg/head)",
+                                                            min = 0, value = 740.1),
+                                               numericInput("mature_body_weight_std","The standard deviation of mature body weight of cows (in kg/head)",
+                                                            min = 0, value = 73.5)
+                                           ),
+                                           sidebarPanel(bsCollapse(id = "farm_level",
+                                                      bsCollapsePanel(title = "-> If 'ED', 'synch-ED', or 'ED-TAI' is chosen for either heifer or cows",
+                                                                      sliderInput("estrus_detection_rate","Percentage of in heat animals that would be detected in the ED programs",
+                                                                                                                                                         min = 0, max = 1, value = 0.4, step = 0.01),
+                                                                      sliderInput("estrus_service_rate","Percentage of detected in heat animals that would be serviced inthe ED programs",
+                                                                                  min = 0, max = 1, value = 0.9, step = 0.01),
+                                                                      sliderInput("ed_conception_rate","Percentage of serviced animals that would be concepted in the ED programs",
+                                                                                  min = 0, max = 1, value = 0.4, step = 0.01),
+                                                                      numericInput("voluntary_waiting_period","Days after parturition when estrus detection followed by AI in ED programs",
+                                                                                   min = 0, value = 45), style = "default"),
+                                                      bsCollapsePanel(title = "-> If 'TAI' is chosen for heifers",
+                                                                      selectInput("heifer_TAI_protocol", "The protocol for heifer in TAI program: ",
+                                                                                  choices = c("dCG2P", "5dCGP")),
+                                                                      
+                                                                     bsCollapsePanel(title = "-> If '5dCG2P' is chosen for heifer TAI program",
+                                                                                     sliderInput("m5dCG2P_conception_rate","Conception rate for 5dCG2P protocol in heifer TAI program",
+                                                                                                 min = 0, max = 1, value = 0.6, step = 0.01)),
+                                                                     bsCollapsePanel(title = "-> If '5dCGP' is chosen for heifer TAI program",
+                                                                                     sliderInput("5dCGP_conception_rate","Conception rate for 5dCGP protocol in heifer TAI program",
+                                                                                                 min = 0, max = 1, value = 0.48, step = 0.01))
+                                                                      ),
+                                                      bsCollapsePanel(title = "-> If 'synch-ED' is chosen for heifers",
+                                                                      selectInput("heifer_synchED_protocol", "The protocol for heifer in synch-ED program: ",
+                                                                                  choices = c("2P", "CP"))),
+                                                      bsCollapsePanel(title = "-> If 'TAI' is chosen for cows",
+                                                                      selectInput("cow_presynch_protocol", "The preSynch protocol (1st breeding) for cow in TAI program: ",
+                                                                                  choices = c("Double OvSynch", "Presynch", "G6G")),
+                                                                      selectInput("cow_TAI_protocol", "The timed AI protocol for cow in the TAI program: ",
+                                                                                  choices = c("OvSynch 56", "OvSynch 48", "CoSynch 72", "5d CoSynch")),
+                                                                      bsCollapsePanel(title = "-> If 'OvSynch 56' is chosen for cow TAI program",
+                                                                                      sliderInput("ovsynch56_conception_rate","Conception rate for OvSynch 56 protocol in cow TAI program",
+                                                                                                  min = 0, max = 1, value = 0.55, step = 0.01)),
+                                                                      bsCollapsePanel(title = "-> If 'OvSynch 48' is chosen for cow TAI program",
+                                                                                      sliderInput("ovsynch48_conception_rate","Conception rate for OvSynch 48 protocol in cow TAI program",
+                                                                                                  min = 0, max = 1, value = 0.4, step = 0.01)),
+                                                                      bsCollapsePanel(title = "-> If 'CoSynch 72' is chosen for cow TAI program",
+                                                                                      sliderInput("cosynch72_conception_rate","Conception rate for CoSynch 72 protocol in cow TAI program",
+                                                                                                  min = 0, max = 1, value = 0.4, step = 0.01)),
+                                                                      bsCollapsePanel(title = "-> If '5d CoSynch' is chosen for cow TAI program",
+                                                                                      sliderInput("cosynch5d_conception_rate","Conception rate for 5d CoSynch protocol in cow TAI program",
+                                                                                                  min = 0, max = 1, value = 0.4, step = 0.01)),
+                                                                      selectInput("cow_resynch_protocol","The resynch protocol for cow that is diagnosed open at pregnancy in the TAI program: ",
+                                                                                  choices = c("TAIafterPD", "TAIbeforePD", "PGFat PD")),
+                                                                      numericInput("voluntary_waiting_period","Days after parturition when the 1st hormonal injection is made in TAI programs:",
+                                                                                   min = 0, value = 45)),
+                                                      bsCollapsePanel(title = "-> If 'ED-TAI' is chosen for cows",
+                                                                      selectInput("cow_presynch_protocol", "The preSynch protocol (1st breeding) for cow in ED-TAI program: ",
+                                                                                  choices = c("Double OvSynch", "Presynch", "G6G")),
+                                                                      selectInput("cow_TAI_protocol", "The timed AI protocol for cow in the ED-TAI program: ",
+                                                                                  choices = c("OvSynch 56", "OvSynch 48", "CoSynch 72", "5d CoSynch")),
+                                                                      bsCollapsePanel(title = "-> If 'OvSynch 56' is chosen for cow ED-TAI program",
+                                                                                      sliderInput("ovsynch56_conception_rate","Conception rate for OvSynch 56 protocol in cow ED-TAI program",
+                                                                                                  min = 0, max = 1, value = 0.55, step = 0.01)),
+                                                                      bsCollapsePanel(title = "-> If 'OvSynch 48' is chosen for cow ED-TAI program",
+                                                                                      sliderInput("ovsynch48_conception_rate","Conception rate for OvSynch 48 protocol in cow ED-TAI program",
+                                                                                                  min = 0, max = 1, value = 0.4, step = 0.01)),
+                                                                      bsCollapsePanel(title = "-> If 'CoSynch 72' is chosen for cow ED-TAI program",
+                                                                                      sliderInput("cosynch72_conception_rate","Conception rate for CoSynch 72 protocol in cow ED-TAI program",
+                                                                                                  min = 0, max = 1, value = 0.4, step = 0.01)),
+                                                                      bsCollapsePanel(title = "-> If '5d CoSynch' is chosen for cow ED-TAI program",
+                                                                                      sliderInput("cosynch5d_conception_rate","Conception rate for 5d CoSynch protocol in cow ED-TAI program",
+                                                                                                  min = 0, max = 1, value = 0.4, step = 0.01)),
+                                                                      selectInput("cow_resynch_protocol","The resynch protocol for cow that is diagnosed open at pregnancy in the ED-TAI program: ",
+                                                                                  choices = c("TAIafterPD", "TAIbeforePD", "PGFat PD")),
+                                                                      numericInput("voluntary_waiting_period","Days after parturition when estrus detection followed by AI in ED-TAI programs:",
+                                                                                   min = 0, value = 45),
+                                                                      numericInput("tai_program_start_day","Days after parturition when TAI protocol starts in ED-TAI programs",
+                                                                                   min = 0, value = 72),
+                                                                      textOutput("TAI_waiting_period"))
+                                                      
+                                           ),width = 12),
+
+                              ),
+                              tabPanel("Pen 1",
+                                       textInput("pen_id_1", "Pen name", placeholder = "pen1"),
+                                       numericInput("vertical_dist_to_milking_parlor_1", "Vertical distance to milking parlor (in meters):",
+                                                    min = 0, value = 0.1),
+                                       numericInput("horizontal_dist_to_milking_parlor_1", "Horizontal distance to milking parlor (in meters):",
+                                                    min = 0, value = 1.6),
+                                       numericInput("number_of_stalls_1","Number of stalls:", min = 0, value = 100),
+                                       selectInput("pen_type_1","Pen type: ", choices = c("Free Stall","Tie Stall")),
+                                       selectInput("bedding_type_1","Bedding type: ", choices = c("Organic","Sand")),
+                                       selectInput("manure_handling_1","Manure handling: ", choices = c("Scraping System","Flush System")),
+                                       selectInput("manure_separator_1","Manure separator: ", choices = c("Sedimentation","Rotary Screen")),
+                                       selectInput("manure_storage_1","Manure storage: ", choices = c("Storage Pit","Storage Pond","Anaerobic Lagoon"))
+                              )), width = 12)),
                  tabPanel("Feed",
-                          downloadLink("download_all_input","Submit")),
+                          tabsetPanel(id = "feeds",
+                              tabPanel("Feeds Selection",
+                                  sidebarPanel(
+                                      tags$h4("Select the purchased feeds from the feed library below: "),
+                                      tags$a(href = "https://docs.google.com/spreadsheets/d/1IfZdBPxKjYVM4XvAeUTsG61H1xbg6N7ib0AqM_Em_Mo/edit#gid=0",
+                                             "Feeds Library")
+                                      ,selectInput("purchased_feeds", "Purchased Feeds: ",
+                                                  choices = feeds_ID ,multiple = TRUE),
+                                      selectInput("growing_feeds","Growing Feeds",
+                                                  choices = feeds_ID, multiple = TRUE),
+                                      sliderInput("n_storage_options","Number of storage options",
+                                                  min = 1, max =5, value =2),
+                                      actionButton("generate_storage_options","Generate Storage Options"), width = 12)),
+                              tabPanel("Storage Option 1",
+                                  sidebarPanel(
+                                      
+                                  )))),
                  tabPanel("Output",
                               tabsetPanel(
                                   tabPanel("Pens",
@@ -310,6 +463,12 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("sandstone"), id = "main",
                                                         textInput("herd_report_name","Herd Report Name: ",
                                                                   value ="herd_report"),width = 4)
                                   )
+                          )),
+                 tabPanel("Download",
+                          sidebarPanel(
+                              downloadLink("download_all_input","Submit")),
+                          sidebarPanel(
+                              downloadLink("download_animal_json","Download Animal JSON File")
                           ))
                  
 )
@@ -328,6 +487,17 @@ server <- function(input, output, session) {
         dates()
     })
     
+    repro <- reactive({
+        shiny::validate(
+            need(input$voluntary_waiting_period <= input$tai_program_start_day , " 'Days after parturition when estrus detection followed by AI in ED-TAI programs' should be less than or equal to 
+                 'Days after parturition when TAI protocol starts in ED-TAI programs'")
+        )
+    })
+    
+    output$TAI_waiting_period <- renderText({
+        repro()
+    })
+    
     observeEvent(input$weather_dataset, {
         updateTabsetPanel(inputId = "coordinates", selected = input$weather_dataset)
     })
@@ -335,6 +505,8 @@ server <- function(input, output, session) {
     observeEvent(input$weather_dataset, {
         updateNumericInput(inputId = "long", value = 0)
     })
+    
+    
     
     coord <- reactive({
         shiny::validate(
@@ -354,8 +526,49 @@ server <- function(input, output, session) {
     })
     
     new_n_fields = reactive({input$n_fields})
-
-    observeEvent(input$generate_fields, {
+    new_n_pens = reactive({input$n_pens})
+    new_n_storage = reactive({input$n_storage_options})
+    
+    observeEvent(input$generate_storage_options, {
+        for (j in 2:5){
+            remove_id = sprintf('Storage Option %i',j)
+            removeTab("feeds", remove_id)
+        }
+        
+        if (new_n_storage() > 1) {
+            for (j in 2:new_n_storage()){
+                add_id = sprintf("Storage Option %i",j)
+                appendTab("feeds",tabPanel(add_id))
+            }
+        }
+    })
+    
+    observeEvent(input$generate_pens, { #TODO: delete hard coded value 10
+        for (j in 2:20){
+            remove_id = sprintf('Pen %i',j)
+            removeTab("animals",remove_id)
+        }
+        
+        if (new_n_pens() > 1){
+            for (j in 2:new_n_pens()){
+                add_id = sprintf('Pen %i',j)
+                appendTab("animals",tabPanel(add_id,
+                                             textInput(sprintf("pen_id_%i",j), "Pen name", placeholder = sprintf("pen%i",j)),
+                                             numericInput(sprintf("vertical_dist_to_milking_parlor_%i",j), "Vertical distance to milking parlor (in meters):",
+                                                          min = 0, value = 0.1),
+                                             numericInput(sprintf("horizontal_dist_to_milking_parlor_%i",j), "Horizontal distance to milking parlor (in meters):",
+                                                          min = 0, value = 1.6),
+                                             numericInput(sprintf("number_of_stalls_%i",j),"Number of stalls:", min = 0, value = 100),
+                                             selectInput(sprintf("pen_type_%i",j),"Pen type: ", choices = c("Free Stall","Tie Stall")),
+                                             selectInput(sprintf("bedding_type_%i",j),"Bedding type: ", choices = c("Organic","Sand")),
+                                             selectInput(sprintf("manure_handling_%i",j),"Manure handling: ", choices = c("Scraping System","Flush System")),
+                                             selectInput(sprintf("manure_separator_%i",j),"Manure separator: ", choices = c("Sedimentation","Rotary Screen")),
+                                             selectInput(sprintf("manure_storage_%i",j),"Manure storage: ", choices = c("Storage Pit","Storage Pond","Anaerobic Lagoon"))))
+            }
+        }
+    })
+    
+    observeEvent(input$generate_fields, { #TODO: delete hard coded value 100
         
         for (j in 2:100){
             remove_id = sprintf('Field %i',j)
@@ -383,7 +596,7 @@ server <- function(input, output, session) {
                                                              numericInput(sprintf("initial_residue_%i",j), "Initial amount of soil residue (kg/ha): ", 0, 0),
                                                              numericInput(sprintf("fresh_N_mineral_rate_%i",j), "Nitrogen N mineralization rate from SWAT: ", 0, 0),
                                                              selectInput(sprintf("soil_cover_type_%i",j), "Soil Cover Type: ", c("Bare","Residue Cover","Grassed")),
-                                                             sliderInput(sprintf("n_Layers_%i",j),"Select the number of soil layers and fill out the corresponding columns in the next table (any
+                                                             sliderInput(sprintf("n_Layers_%i",j),"Select the number of soil layers (at least 3 layers are recommended for best results) and fill out the corresponding columns in the next table (any
                                                             unused columns can be left empty)", 1, 5, 3), width = 4
                                                          ),
                                                          sidebarPanel(matrixInput(
@@ -397,12 +610,32 @@ server <- function(input, output, session) {
                                                              )
                                                          ),width = 8)),
                                                 tabPanel("Crop",
-                                                         sidebarPanel(checkboxGroupInput(sprintf("selected_crops_%i",j),"Select the desired crops and fill out the corresponding rows in the next table (any
-                                                            unused rows can be left empty)",
-                                                                                         choices = c("Alfalfa","Cereal Rye","Corn",
-                                                                                                     "Fall Oats","Potato","Soybean","Spring Barley",
-                                                                                                     "Spring Wheat","Sugar Beet","Tall Fescue",
-                                                                                                     "Triticale","Winter Wheat")),width = 4),
+                                                         sidebarPanel(tags$h3("Build a 5-year crop rotation"),
+                                                                      selectInput(sprintf("year_1_crop_%i",j),"Select the desired crop for year 1:",
+                                                                                  choices = c("Alfalfa","Cereal Rye","Corn",
+                                                                                              "Fall Oats","Potato","Soybean","Spring Barley",
+                                                                                              "Spring Wheat","Sugar Beet","Tall Fescue",
+                                                                                              "Triticale","Winter Wheat")),
+                                                                      selectInput(sprintf("year_2_crop_%i",j),"Select the desired crop for year 2:",
+                                                                                  choices = c("Alfalfa","Cereal Rye","Corn",
+                                                                                              "Fall Oats","Potato","Soybean","Spring Barley",
+                                                                                              "Spring Wheat","Sugar Beet","Tall Fescue",
+                                                                                              "Triticale","Winter Wheat")),
+                                                                      selectInput(sprintf("year_3_crop_%i",j),"Select the desired crop for year 3:",
+                                                                                  choices = c("Alfalfa","Cereal Rye","Corn",
+                                                                                              "Fall Oats","Potato","Soybean","Spring Barley",
+                                                                                              "Spring Wheat","Sugar Beet","Tall Fescue",
+                                                                                              "Triticale","Winter Wheat")),
+                                                                      selectInput(sprintf("year_4_crop_%i",j),"Select the desired crop for year 4:",
+                                                                                  choices = c("Alfalfa","Cereal Rye","Corn",
+                                                                                              "Fall Oats","Potato","Soybean","Spring Barley",
+                                                                                              "Spring Wheat","Sugar Beet","Tall Fescue",
+                                                                                              "Triticale","Winter Wheat")),
+                                                                      selectInput(sprintf("year_5_crop_%i",j),"Select the desired crop for year 5:",
+                                                                                  choices = c("Alfalfa","Cereal Rye","Corn",
+                                                                                              "Fall Oats","Potato","Soybean","Spring Barley",
+                                                                                              "Spring Wheat","Sugar Beet","Tall Fescue",
+                                                                                              "Triticale","Winter Wheat")),width = 4),
                                                          sidebarPanel(matrixInput(
                                                              sprintf("crop_rotation_%i",j),
                                                              value = crop_rotation,
