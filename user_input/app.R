@@ -15,24 +15,24 @@ weather_tabs <- tabsetPanel(
 
 soil_layers <- matrix("",18,5)
 colnames(soil_layers) <- c("Layer 1","Layer 2","Layer 3","Layer 4", "Layer 5")
-rownames(soil_layers) <- c("Lower depth of soil layer",
-                 "Fractional value at which point soil water becomes plant unavailable",
-                 "Fractional value of soil water at which the soil matric potential is zero",
-                 "Saturated soil value (fractional)",
-                 "saturated hydraulic conductivity (mm/h)",
-                 "Fraction of porosity from which anions are excluded",
+rownames(soil_layers) <- c("Lower depth of soil layer (in cm)",
+                 "Fractional value at which point soil water becomes plant unavailable (Dmnl)",
+                 "Fractional value of soil water at which the soil matric potential is zero (Dmnl)",
+                 "Saturated soil value (Dmnl)",
+                 "saturated hydraulic conductivity (in mm/h)",
+                 "Fraction of porosity from which anions are excluded (Dmnl)",
                  "Percent of clay per layer (%)",
-                 "Soil temperature of each layer",
-                 "Bulk density of the soil for the entire depth",
-                 "Percentage of layer composed of organic carbon",
-                 "NH4 Initializer variable",
-                 "Active N %",
-                 "Labile Phosphorus",
-                 "Active mineral rate",
-                 "Volatile exchange factor",
-                 "Dentrification rate",
-                 "Fraction of soil water in layer",
-                 "Fraction of soil organic matter")
+                 "Soil temperature of each layer (in \u00B0 C)",
+                 "Bulk density of the soil for the entire depth (in g/cm3)",
+                 "Percentage of layer composed of organic carbon (%)",
+                 "NH4 Initializer variable (in mg/Kg)",
+                 "SWAT Factor (Dmnl)",
+                 "Labile Phosphorus (in mg/Kg)",
+                 "Active mineral rate (Dmnl)",
+                 "Volatile exchange factor (Dmnl)",
+                 "Dentrification rate (Dmnl)",
+                 "Fraction of soil water in layer (Dmnl)",
+                 "Fraction of soil organic matter (Dmnl)")
 
 crop_rotation <- matrix("",5,3)
 colnames(crop_rotation) <- c("Planting Date (in Julian day)",
@@ -54,14 +54,14 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("darkly"), id = "main",
                               selectInput("testing","Do you wish to run tests?",
                                           choices = c("Yes", "No")),
                               selectInput("weather_dataset","Can you provide a complete weather dataset?",
-                                          choices = c("Yes", "No")),
+                                          choices = c("No", "Yes")),
                               numericInput("lat", "Latitude (in \u00B0)", min = -90, max = 90, value = 0),
                               weather_tabs,
                               textOutput("coord"),
                               sliderInput("n_fields","Number of Fields: ",
                                           min = 1, max =100, value = 1),
                               actionButton("generate_fields","Generate Fields"),
-                              width = 8
+                              width = 12
                           )),
                  
                  tabPanel("Fields",
@@ -70,19 +70,19 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("darkly"), id = "main",
                                    tabsetPanel(
                                        tabPanel("Soil",
                                                 sidebarPanel(
-                                                numericInput("profile_bulk_density_1","Bulk density of the soil for the entire depth:",
-                                                             0, 0),
-                                                numericInput("CN2_1", "Curve Number (SCS) represents surface runoff factor of water: ", 0, 0),
-                                                numericInput("field_slope_1", "Slope of an individual field (%/100): ", 0, 0),
-                                                numericInput("slope_length_1", "Length of slope: ", 0, 0),
-                                                numericInput("manning_1", "Mannings roughness coefficient for ground use type: ", 0, 0),
-                                                numericInput("field_size_1", "Size of individual field where slope was calculated: ", 0, 0),
-                                                numericInput("practice_factor_1", "Ratio of soil loss with a specific support practice to corresponding loss with up-and-down slope culture: ", 0, 0),
-                                                numericInput("sand_1", "Fraction of sand (%/100): ", 0, 0),
-                                                numericInput("silt_1", "Fraction of silt (%/100): ", 0, 0),
-                                                numericInput("soil_albedo_1", "Soil solar radiation absorbance factor: ", 0, 0),
-                                                numericInput("initial_residue_1", "Initial amount of soil residue (kg/ha): ", 0, 0),
-                                                numericInput("fresh_N_mineral_rate_1", "Nitrogen N mineralization rate from SWAT: ", 0, 0),
+                                                numericInput("profile_bulk_density_1","Bulk density of the soil for the entire depth (in g/cm3):",
+                                                             0, value = 1.3),
+                                                numericInput("CN2_1", "Curve Number (SCS) represents surface runoff factor of water (Dmnl): ", 0, value =85),
+                                                numericInput("field_slope_1", "Slope of an individual field (Dmnl): ", 0, value =0.02),
+                                                numericInput("slope_length_1", "Length of slope (in m): ", 0, value =3),
+                                                numericInput("manning_1", "Mannings roughness coefficient for ground use type (Dmnl): ", 0, value =0.4),
+                                                numericInput("field_size_1", "Size of individual field where slope was calculated (in Hectares): ", 0, value =1),
+                                                numericInput("practice_factor_1", "Ratio of soil loss with a specific support practice to corresponding loss with up-and-down slope culture (Dmnl): ", 0, value =0.08),
+                                                numericInput("sand_1", "Fraction of sand (Dmnl): ", 0, value =15),
+                                                numericInput("silt_1", "Fraction of silt (Dmnl): ", 0, value =65),
+                                                numericInput("soil_albedo_1", "Soil solar radiation absorbance factor (Dmnl): ", 0,value = 0.16),
+                                                numericInput("initial_residue_1", "Initial amount of soil residue (in kg/ha): ", 0, 0),
+                                                numericInput("fresh_N_mineral_rate_1", "Nitrogen N mineralization rate from SWAT (Dmnl): ", 0,value = 0.05),
                                                 selectInput("soil_cover_type_1", "Soil Cover Type: ", c("Bare","Residue Cover","Grassed")),
                                                 sliderInput("n_Layers_1","Select the number of soil layers (at least 3 layers are recommended for best results) and fill out the corresponding columns in the next table (any
                                                             unused columns can be left empty)", 1, 5, 3)            
@@ -136,8 +136,7 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("darkly"), id = "main",
                                                     )
                                                 ),
                                                 width = 8)
-                                                ),
-                                       tabPanel("Field Management")
+                                                )
                                    ))))
                       ,
                  tabPanel("Animals",
@@ -317,18 +316,30 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("darkly"), id = "main",
                                       selectInput("growing_feeds","Growing Feeds",
                                                   choices = feeds_ID, multiple = TRUE),
                                       sliderInput("n_storage_options","Number of storage options",
-                                                  min = 1, max =5, value =2),
+                                                  min = 1, max =5, value =1),
                                       actionButton("generate_storage_options","Generate Storage Options"), width = 12)),
                               tabPanel("Storage Option 1",
                                   sidebarPanel(
-                                      
+                                      selectInput("storage_type_1","Ensiling method used to store the feeds:",
+                                                  choices = c("Bag","Tower","Bunk","Pile")),
+                                      selectInput("moisture_1","Storage system as adopted in the loss reduction table:",
+                                                  choices = c("Direct Cut","Wilted","Baleage","Haylage","Moist Hay","Dry Hay")),
+                                      selectInput("additive_1","Type of preservative used for the silage: ",
+                                                  choices = c("Preservative")),
+                                      numericInput("packing_density_1","Stocking density of the storage system:",min = 0 , value = 14),
+                                      selectInput("inoculation_1","Type of lactic acid bacteria (LAB) inoculants: ",
+                                                  choices = c("Homofermentative","Heterofermentative ")),
+                                      selectInput("bunk_type_1","Bunk Type:",choices = c("Open floor")),
+                                      selectInput("ventilation_1","Should the storage space be ventilated ?",choices = c("Yes","No")),
+                                      numericInput("removal_rate_1","Removal rate", min = 0, value =6),
+                                      numericInput("initial_dry_matter_1","Initial dry matter of the cut feeds (in kg)", min = 0, value = 0), width = 12
                                   )))),
                  tabPanel("Output",
                               tabsetPanel(
                                   tabPanel("Pens",
                                            sidebarPanel(selectInput("pens_report_csv","Do you wish to produce csv files?",
                                                        choices = c("Yes","No")),
-                                                       selectInput("pens_report_graph","Do you wish to produce graphics",
+                                                       selectInput("pens_report_graph","Do you wish to produce graphics?",
                                                        choices = c("Yes","No")),
                                                        textInput("pens_report_name","Pens Report Name: ",value = "pen_report"),width = 12),
                                            sidebarPanel(checkboxGroupInput("pens_ration_report","Ration Report",
@@ -350,7 +361,7 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("darkly"), id = "main",
                                   tabPanel("Fields",
                                            sidebarPanel(selectInput("fields_report_csv","Do you wish to produce csv files?",
                                                                     choices = c("Yes","No")),
-                                                        selectInput("fields_report_graph","Do you wish to produce graphics",
+                                                        selectInput("fields_report_graph","Do you wish to produce graphics?",
                                                                     choices = c("Yes","No")),
                                                         textInput("fields_report_name","Fields Report Name: ",value = "field_report"),width = 12),
                                            sidebarPanel(checkboxGroupInput("fields_crop_report","Crop Report",
@@ -404,13 +415,13 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("darkly"), id = "main",
                                   tabPanel("Mass Balance",
                                            sidebarPanel(selectInput("mass_balance_report_csv","Do you wish to produce csv files?",
                                                                     choices = c("Yes","No")),
-                                                        selectInput("mass_balance_report_graph","Do you wish to produce graphics",
+                                                        selectInput("mass_balance_report_graph","Do you wish to produce graphics?",
                                                                     choices = c("Yes","No")),
                                                         textInput("mass_balance_report_name","Mass Balance Report Name: ",value = "mass_balance_report"),width = 12)),
                                   tabPanel("Feed Storage",
                                            sidebarPanel(selectInput("feed_storage_report_csv","Do you wish to produce csv files?",
                                                                     choices = c("Yes","No")),
-                                                        selectInput("feed_storage_report_graph","Do you wish to produce graphics",
+                                                        selectInput("feed_storage_report_graph","Do you wish to produce graphics?",
                                                                     choices = c("Yes","No")),
                                                         textInput("feed_storage_report_name","Feed Storage Report Name: ",value = "feed_storage_report"),width = 12),
                                            sidebarPanel(checkboxGroupInput("storage_report","Storage Report",
@@ -424,7 +435,7 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("darkly"), id = "main",
                                   tabPanel("Manure Storage",
                                            sidebarPanel(selectInput("manure_storage_report_csv","Do you wish to produce csv files?",
                                                                     choices = c("Yes","No")),
-                                                        selectInput("manure_storage_report_graph","Do you wish to produce graphics",
+                                                        selectInput("manure_storage_report_graph","Do you wish to produce graphics?",
                                                                     choices = c("Yes","No")),
                                                         textInput("manure_storage_report_name","Manure Storage Report Name: ",value = "manure_storage_report"),width = 12),
                                            sidebarPanel(checkboxGroupInput("handling_report","Handling Report",
@@ -446,7 +457,7 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("darkly"), id = "main",
                                   tabPanel("Life Cycle",
                                            sidebarPanel(selectInput("lifecycle_report_csv","Do you wish to produce csv files?",
                                                                     choices = c("Yes","No")),
-                                                        selectInput("lifecycle_report_graph","Do you wish to produce graphics",
+                                                        selectInput("lifecycle_report_graph","Do you wish to produce graphics?",
                                                                     choices = c("Yes","No")),
                                                         textInput("lifecycle_report_name","Life Cycle Report Name: ",value = "life_cycle_report"),width = 12),
                                            sidebarPanel(checkboxGroupInput("initialization_db_summary_report","Initialization Database Summary Report",
@@ -538,7 +549,21 @@ server <- function(input, output, session) {
         if (new_n_storage() > 1) {
             for (j in 2:new_n_storage()){
                 add_id = sprintf("Storage Option %i",j)
-                appendTab("feeds",tabPanel(add_id))
+                appendTab("feeds",tabPanel(add_id,
+                                           sidebarPanel(
+                    selectInput(sprintf("storage_type_%i",j),"Ensiling method used to store the feeds:",
+                                choices = c("Bag","Tower","Bunk","Pile")),
+                    selectInput(sprintf("moisture_%i",j),"Storage system as adopted in the loss reduction table:",
+                                choices = c("Direct Cut","Wilted","Baleage","Haylage","Moist Hay","Dry Hay")),
+                    selectInput(sprintf("additive_%i",j),"Type of preservative used for the silage: ",
+                                choices = c("Preservative")),
+                    numericInput(sprintf("packing_density_%i",j),"Stocking density of the storage system:",min = 0 , value = 14),
+                    selectInput(sprintf("inoculation_%i",j),"Type of lactic acid bacteria (LAB) inoculants: ",
+                                choices = c("Homofermentative","Heterofermentative ")),
+                    selectInput(sprintf("bunk_type_%i",j),"Bunk Type:",choices = c("Open floor")),
+                    selectInput(sprintf("ventilation_%i",j),"Should the storage space be ventilated ?",choices = c("Yes","No")),
+                    numericInput(sprintf("removal_rate_%i",j),"Removal rate", min = 0, value =6),
+                    numericInput(sprintf("initial_dry_matter_%i",j),"Initial dry matter of the cut feeds (in kg)", min = 0, value = 0), width = 12)))
             }
         }
     })
@@ -582,19 +607,19 @@ server <- function(input, output, session) {
                                             tabsetPanel(
                                                 tabPanel("Soil",
                                                          sidebarPanel(
-                                                             numericInput(sprintf("profile_bulk_density_%i",j),"Bulk density of the soil for the entire depth:",
-                                                                          0, 0),
-                                                             numericInput(sprintf("CN2_%i",j), "Curve Number (SCS) represents surface runoff factor of water: ", 0, 0),
-                                                             numericInput(sprintf("field_slope_%i",j), "Slope of an individual field (%/100): ", 0, 0),
-                                                             numericInput(sprintf("slope_length_%i",j), "Length of slope: ", 0, 0),
-                                                             numericInput(sprintf("manning_%i",j), "Mannings roughness coefficient for ground use type: ", 0, 0),
-                                                             numericInput(sprintf("field_size_%i",j), "Size of individual field where slope was calculated: ", 0, 0),
-                                                             numericInput(sprintf("practice_factor_%i",j), "Ratio of soil loss with a specific support practice to corresponding loss with up-and-down slope culture: ", 0, 0),
-                                                             numericInput(sprintf("sand_%i",j), "Fraction of sand (%/100): ", 0, 0),
-                                                             numericInput(sprintf("silt_%i",j), "Fraction of silt (%/100): ", 0, 0),
-                                                             numericInput(sprintf("soil_albedo_%i",j), "Soil solar radiation absorbance factor: ", 0, 0),
-                                                             numericInput(sprintf("initial_residue_%i",j), "Initial amount of soil residue (kg/ha): ", 0, 0),
-                                                             numericInput(sprintf("fresh_N_mineral_rate_%i",j), "Nitrogen N mineralization rate from SWAT: ", 0, 0),
+                                                             numericInput(sprintf("profile_bulk_density_%i",j),"Bulk density of the soil for the entire depth (in g/cm3):",
+                                                                          0,value = 1.3),
+                                                             numericInput(sprintf("CN2_%i",j), "Curve Number (SCS) represents surface runoff factor of water (Dmnl): ", 0,value = 85),
+                                                             numericInput(sprintf("field_slope_%i",j), "Slope of an individual field (Dmnl): ", 0,value = 0.02),
+                                                             numericInput(sprintf("slope_length_%i",j), "Length of slope (in m): ", 0,value = 3),
+                                                             numericInput(sprintf("manning_%i",j), "Mannings roughness coefficient for ground use type (Dmnl): ", 0,value = 0.4),
+                                                             numericInput(sprintf("field_size_%i",j), "Size of individual field where slope was calculated (in Hectares): ", 0,value = 1),
+                                                             numericInput(sprintf("practice_factor_%i",j), "Ratio of soil loss with a specific support practice to corresponding loss with up-and-down slope culture (Dmnl): ", 0,value = 0.08),
+                                                             numericInput(sprintf("sand_%i",j), "Fraction of sand (Dmnl): ", 0,value = 15),
+                                                             numericInput(sprintf("silt_%i",j), "Fraction of silt (Dmnl): ", 0,value = 65),
+                                                             numericInput(sprintf("soil_albedo_%i",j), "Soil solar radiation absorbance factor (Dmnl): ", 0,value = 0.16),
+                                                             numericInput(sprintf("initial_residue_%i",j), "Initial amount of soil residue (in kg/ha): ", 0,value = 0),
+                                                             numericInput(sprintf("fresh_N_mineral_rate_%i",j), "Nitrogen N mineralization rate from SWAT (Dmnl): ", 0,value = 0.05),
                                                              selectInput(sprintf("soil_cover_type_%i",j), "Soil Cover Type: ", c("Bare","Residue Cover","Grassed")),
                                                              sliderInput(sprintf("n_Layers_%i",j),"Select the number of soil layers (at least 3 layers are recommended for best results) and fill out the corresponding columns in the next table (any
                                                             unused columns can be left empty)", 1, 5, 3), width = 4
@@ -609,7 +634,7 @@ server <- function(input, output, session) {
                                                                  names = TRUE
                                                              )
                                                          ),width = 8)),
-                                                tabPanel("Crop",
+                                                tabPanel("Crop Rotation",
                                                          sidebarPanel(tags$h3("Build a 5-year crop rotation"),
                                                                       selectInput(sprintf("year_1_crop_%i",j),"Select the desired crop for year 1:",
                                                                                   choices = c("Alfalfa","Cereal Rye","Corn",
@@ -647,8 +672,7 @@ server <- function(input, output, session) {
                                                              )
                                                          ),
                                                          width = 8)
-                                                ),
-                                                tabPanel("Field Management")
+                                                )
                                                 
                                             )))
             }
@@ -712,18 +736,12 @@ server <- function(input, output, session) {
             "do_not_breed_time": %i,
             "cull_milk_production": %i,
             "cow_times_milked_per_day": %i
-        },
-        "repro": {
-            "heifer_repro_method": "%s",
-            "cow_repro_method": "%s"
-        }
-    }
-}'  ,calf_num(),heiferI_num(),heiferII_num(),heiferIII_num(),
+        },'
+    ,calf_num(),heiferI_num(),heiferII_num(),heiferIII_num(),
     cow_num(),replace_num(),herd_num(),herd_init(),breed(),breeding_start_day_h(),
     heifer_repro_method(),cow_repro_method(),semen_type(),days_in_preg_when_dry(),
     lactation_curve(),heifer_repro_cull_time(),repro_cull_time(),do_not_breed_time(),
-    cull_milk_production(),cow_times_milked_per_day(),
-    heifer_repro_method(),cow_repro_method())
+    cull_milk_production(),cow_times_milked_per_day())
     })
 
     output$download_animal_json <- downloadHandler(
