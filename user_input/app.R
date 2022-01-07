@@ -93,16 +93,9 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("darkly"), id = "main",
                                                             unused columns can be left empty)", 1, 5, 3)            
                                                             , width = 4
                                                           ),
-                                                          sidebarPanel(matrixInput(
-                                                            "soil_layers_1",
-                                                            value = soil_layers,
-                                                            rows = list(
-                                                              extend = FALSE
-                                                            ),
-                                                            cols = list(
-                                                              names = TRUE
-                                                            )
-                                                          ),width = 8)),
+                                                          mainPanel(
+                                                            uiOutput("soil_layers_1") # show the matrix
+                                                          )),
                                                  tabPanel("Crop Rotation",
                                                           sidebarPanel(tags$h3("Build a 5-year crop rotation"),
                                                                        selectInput("year_1_crop_1","Select the desired crop for year 1:",
@@ -499,6 +492,60 @@ server <- function(input, output, session) {
     )
   })
   
+
+  output$soil_layers_1 <- renderUI({
+    
+    # setting up the rows - variables
+    
+    row_variables <- c("Lower depth of soil layer (in cm)",
+                       "Fractional value at which point soil water becomes plant unavailable (Dmnl)",
+                       "Fractional value of soil water at which the soil matric potential is zero (Dmnl)",
+                       "Saturated soil value (Dmnl)",
+                       "saturated hydraulic conductivity (in mm/h)",
+                       "Fraction of porosity from which anions are excluded (Dmnl)",
+                       "Percent of clay per layer (%)",
+                       "Soil temperature of each layer (in \u00B0 C)",
+                       "Bulk density of the soil for the entire depth (in g/cm3)",
+                       "Percentage of layer composed of organic carbon (%)",
+                       "NH4 Initializer variable (in mg/Kg)",
+                       "SWAT Factor (Dmnl)",
+                       "Labile Phosphorus (in mg/Kg)",
+                       "Active mineral rate (Dmnl)",
+                       "Volatile exchange factor (Dmnl)",
+                       "Dentrification rate (Dmnl)",
+                       "Fraction of soil water in layer (Dmnl)",
+                       "Fraction of soil organic matter (Dmnl)")
+    
+    # creating the matrix
+    
+    matrix_layer <- matrix(" ", ncol = input$n_Layers_1, nrow = length(row_variables))
+    
+    # renaming the rows
+    
+    rownames(matrix_layer) <- row_variables
+    
+    # setting up the number of layers
+    
+    n_layers <- input$n_Layers_1
+    
+    vector_layers <- vector()
+    
+    for (i in 1:n_layers){
+      
+      vector_layers[i] <- paste("Layer", i)
+    }
+    
+    # renaming the columns
+    
+    colnames(matrix_layer) <- vector_layers
+    
+    # matrixInput
+    
+    matrixInput("soil_layers_1", "Soil Layers", matrix_layer, rows = list(names = TRUE), cols = list(names = TRUE))
+    
+  })  
+  
+  
   output$date <- renderText({
     dates()
   })
@@ -651,16 +698,9 @@ server <- function(input, output, session) {
                                                  sliderInput(sprintf("n_Layers_%i",j),"Select the number of soil layers (at least 3 layers are recommended for best results) and fill out the corresponding columns in the next table (any
                                                             unused columns can be left empty)", 1, 5, 3), width = 4
                                                ),
-                                               sidebarPanel(matrixInput(
-                                                 sprintf("soil_layers_%i",j),
-                                                 value = soil_layers,
-                                                 rows = list(
-                                                   extend = FALSE
-                                                 ),
-                                                 cols = list(
-                                                   names = TRUE
-                                                 )
-                                               ),width = 8)),
+                                               mainPanel(
+                                                 uiOutput(sprintf("soil_layers_%i",j)) # show the matrix
+                                               )),
                                       tabPanel("Crop Rotation",
                                                sidebarPanel(tags$h3("Build a 5-year crop rotation"),
                                                             selectInput(sprintf("year_1_crop_%i",j),"Select the desired crop for year 1:",
