@@ -42,11 +42,6 @@ rownames(crop_rotation) <- c("Year 1", "Year 2", "Year 3", "Year 4", "Year 5")
 
 feeds_ID <- c(1:34,38:52,56,57,61,65,69,73,77,81,85:87,91,92,96:157)
 
-# Globals
-field_count <- 1
-pen_count <- 1
-storage_options_count <- 1
-
 # Define UI ----
 ui <- navbarPage("RuFas Input", theme = shinytheme("darkly"), id = "main",
                  tabPanel("General Configuration",
@@ -71,7 +66,7 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("darkly"), id = "main",
                  
                  tabPanel("Fields",
                           tabsetPanel(id="fields",
-                                      tabPanel("Field 1",
+                                      tabPanel(textInput("field_1","", placeholder = "Field 1"),
                                                tabsetPanel(
                                                  tabPanel("Soil",
                                                           sidebarPanel(
@@ -491,6 +486,12 @@ ui <- navbarPage("RuFas Input", theme = shinytheme("darkly"), id = "main",
 
 # Define server logic ----
 server <- function(input, output, session) {
+  
+  # Globals
+  field_count <- 1
+  pen_count <- 1
+  storage_options_count <- 1
+  
   dates <- reactive({
     shiny::validate(
       need(as.character.Date(input$start_end_dates[1]) != "", "Please enter a valid start date"),
@@ -630,7 +631,7 @@ server <- function(input, output, session) {
       for (j in start : n_fields){
         print(j)
         add_id = sprintf("Field %i",j)
-        appendTab("fields",tabPanel(add_id,
+        appendTab("fields",tabPanel(textInput(sprintf("field_%i",j),"", placeholder = sprintf("Field %i",j)),
                                     tabsetPanel(
                                       tabPanel("Soil",
                                                sidebarPanel(
